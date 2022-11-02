@@ -2,7 +2,7 @@
   lib,
   symlinkJoin,
   stdenv,
-  fetchFromGitHub,
+  nix-filter,
   isPy3k,
   buildPythonPackage,
   pythonRelaxDepsHook,
@@ -47,7 +47,21 @@ buildPythonPackage rec {
   format = "pyproject";
   disabled = !isPy3k;
 
-  src = lib.cleanSource ./.;
+  src = nix-filter {
+    root = ./.;
+    include = [
+      "daemon"
+      "docs"
+      "gui"
+      "man"
+      "netns"
+      "CHANGELOG.md"
+      "configure.ac"
+      "LICENCE"
+      "Makefile.am"
+      "README.md"
+    ];
+  };
 
   preAutoreconf = ''
     # Create files for AutoReconf

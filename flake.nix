@@ -3,12 +3,14 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     flake-utils.url = "github:numtide/flake-utils";
+    nix-filter.url = "github:numtide/nix-filter";
   };
 
   outputs = {
     self,
     nixpkgs,
     flake-utils,
+    nix-filter,
   }:
     {
       overlays.default = final: prev: {
@@ -28,10 +30,11 @@
         inherit system;
         overlays = [
           self.overlays.default
+          nix-filter.overlays.default
         ];
       };
-    in {
-      devShells.default = self.packages.${system}.core-python.env;
+    in rec {
+      devShells.default = packages.core-python.env;
 
       formatter = pkgs.alejandra;
 
@@ -53,9 +56,16 @@
             ethtool
             iproute2
             docker-client
-            self.packages.${system}.core-python
+            packages.core-python
           ]);
-          runScript = "${self.packages.${system}.core-python}/bin/core-daemon";
+          runScript = "${packages.core-python}/bin/core-daemon";
+        };
+      };
+
+      apps = {
+        core-cleanup = flake-utils.lib.mkApp {
+          drv = packages.core-python;
+          exePath = "/bin/core-cleanup";
         };
       };
     });
