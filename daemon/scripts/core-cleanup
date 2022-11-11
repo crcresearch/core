@@ -15,9 +15,6 @@ if [ `id -u` != 0 ]; then
     exit 1
 fi
 
-PATH="/sbin:/bin:/usr/sbin:/usr/bin"
-export PATH
-
 if [ "z$1" = "z-d" ]; then
     pypids=`pidof python3 python`
     for p in $pypids; do
