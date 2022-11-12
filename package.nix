@@ -7,16 +7,24 @@
   buildPythonPackage,
   pythonRelaxDepsHook,
   autoreconfHook,
+  makeWrapper,
   pkg-config,
-  nftables,
-  procps,
-  iproute2,
+  bash,
+  coreutils,
   ethtool,
-  mount,
-  umount,
-  libev,
-  openvswitch,
+  gawk,
+  gnugrep,
   imagemagick,
+  iproute2,
+  killall,
+  libev,
+  libuuid,
+  mount,
+  nftables,
+  openvswitch,
+  procps,
+  tcpdump,
+  umount,
   # Python Dependencies
   invoke,
   lxml,
@@ -36,6 +44,9 @@
   help2man,
   sphinx,
   sphinx-rtd-theme,
+  # Docker
+  withDocker ? true,
+  docker-client,
   # Testing
   nixosTests,
   pytest,
@@ -85,6 +96,7 @@ buildPythonPackage rec {
       autoreconfHook
       pkg-config
       pythonRelaxDepsHook
+      makeWrapper
     ]
     ++ lib.optionals withDocs [
       help2man
@@ -133,7 +145,16 @@ buildPythonPackage rec {
   installPhase = ''
     make install
     runHook pipInstallPhase
+
     install -Dm755 daemon/scripts/* -t $out/bin
+
+    wrapProgram $out/bin/core-cleanup \
+      --prefix PATH : ${lib.makeBinPath [procps gnugrep coreutils killall iproute2 gawk nftables]}
+
+    wrapProgram $out/bin/core-daemon \
+      --prefix PATH : ${lib.makeBinPath ([bash nftables iproute2 ethtool libuuid mount procps umount] ++ (lib.lists.optional withDocker docker-client))}
+
+    wrapProgram $out/bin/core-route-monitor --prefix PATH : ${lib.makeBinPath [tcpdump]}
 
     mkdir -p $out/etc/core
     cp daemon/data/*.conf $out/etc/core/
