@@ -64,7 +64,8 @@ class DockerClient:
         return utils.cmd(f"docker exec {self.name} {cmd}", wait=wait, shell=shell)
 
     def create_ns_cmd(self, cmd: str) -> str:
-        return f"nsenter -t {self.pid} -a {cmd}"
+        environment = self.run(f"/bin/sh -c 'cat /proc/{self.pid}/environ | xargs -0'")
+        return f"nsenter -t {self.pid} -a /bin/env -i - {environment} {cmd}"
 
     def get_pid(self) -> str:
         args = f"docker inspect -f '{{{{.State.Pid}}}}' {self.name}"
