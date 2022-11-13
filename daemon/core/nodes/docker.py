@@ -25,24 +25,10 @@ class DockerClient:
         self.pid: Optional[str] = None
 
     def create_container(self) -> str:
-        metadata = self.get_image_info()
-
-        start_command = []
-        entrypoint = metadata["Config"]["Entrypoint"]
-        if entrypoint is not None:
-            start_command = start_command + entrypoint
-        command = metadata["Config"]["Cmd"]
-        if command is not None:
-            start_command = start_command + command
-        if len(start_command) == 0:
-            start_command = ["/usr/bin/env", "bash"]
-        start_command = "/bin/sh -c '" + " ".join(start_command) + "'"
-        logger.info(start_command)
-
         self.run(
             f"docker run -td --init --net=none --hostname {self.name} "
             f"--name {self.name} --sysctl net.ipv6.conf.all.disable_ipv6=0 "
-            f"--privileged {self.image} {start_command}"
+            f"--privileged {self.image}"
         )
         self.pid = self.get_pid()
         return self.pid
