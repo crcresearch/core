@@ -60,7 +60,7 @@ in
     format = "pyproject";
     disabled = !isPy3k;
 
-    src = gitignoreSource ./.;
+    src = gitignoreSource ../.;
 
     preAutoreconf = ''
       # Create files for AutoReconf
