@@ -6,8 +6,9 @@
 }: {
   flake = {
     overlays.core = final: prev: {
+      ospf-mdr = prev.callPackage ./ospf-mdr.nix {};
       core-emu = with prev.python3Packages; toPythonApplication core-emu;
-
+      
       pythonPackagesExtensions =
         prev.pythonPackagesExtensions
         ++ [
