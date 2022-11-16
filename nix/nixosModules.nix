@@ -22,7 +22,7 @@
 
           settings = lib.mkOption {
             type = lib.types.submodule {
-              freeformType = settingsFormat.type;
+              freeformType = with lib.types; attrsOf (oneOf [bool int float str]);
 
               options.port = lib.mkOption {
                 type = lib.types.port;
