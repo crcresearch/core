@@ -8,6 +8,7 @@
     }:
       with lib; let
         cfg = config.services.core-emu;
+        settingsFormat = pkgs.formats.ini {};
       in {
         options.services.core-emu = {
           enable = mkEnableOption (mdDoc "Common Open Research Emulator");
@@ -18,9 +19,35 @@
             default = self.packages.${pkgs.hostPlatform.system}.core-emu;
             defaultText = literalExpression "self.packages.core-emu";
           };
+
+          settings = lib.mkOption {
+            type = lib.types.submodule {
+              freeformType = settingsFormat.type;
+
+              options.port = lib.mkOption {
+                type = lib.types.port;
+                default = 4038;
+                description = ''
+                  Which port thi service should listen on.
+                '';
+              };
+
+              options.grpcport = lib.mkOption {
+                type = lib.types.port;
+                default = 50051;
+                description = ''
+                  Which port the GRPC service should listen on.
+                '';
+              };
+            };
+            default = {};
+            description = ''
+            '';
+          };
         };
 
         config = mkIf cfg.enable {
+          # Enable docker as a requirement
           virtualisation.docker = {
             enable = true;
             daemon.settings = {
@@ -29,11 +56,22 @@
             };
           };
 
+          # Add the package to the system to make it easier for users to run
           environment.systemPackages = [cfg.package];
 
-          environment.etc."core/core.conf".source = "${cfg.package}/etc/core/core.conf";
+          # Set some default settings
+          services.core-emu.settings = {
+            listenaddr = lib.mkDefault "localhost";
+            grpcaddress = lib.mkDefault "localhost";
+          };
+
+          # Generate etc configs
+          environment.etc."core/core.conf".source = settingsFormat.generate "core-config.conf" {
+            core-daemon = cfg.settings;
+          };
           environment.etc."core/logging.conf".source = "${cfg.package}/etc/core/logging.conf";
 
+          # Create daemon service
           systemd.services.core-daemon = {
             description = "Common Open Research Emulator Service";
             wantedBy = ["multi-user.target"];
@@ -50,7 +88,7 @@
                     PID=$1
                     while(true); do
                         FAIL=0
-                        $(${pkgs.netcat}/bin/nc -z -w 1 localhost 50051 &> /dev/null) || FAIL=1
+                        $(${pkgs.netcat}/bin/nc -z -w 1 ${cfg.settings.grpcaddress} ${builtins.toString cfg.settings.grpcport} &> /dev/null) || FAIL=1
                         if [[ $FAIL -eq 0 ]]; then
                             if [[ $READY -eq 0 ]]; then
                               ${pkgs.systemdMinimal}/bin/systemd-notify --ready
