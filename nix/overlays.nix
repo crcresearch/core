@@ -6,6 +6,7 @@
 }: {
   flake = {
     overlays.core = final: prev: {
+      emane = prev.callPackage ./emane.nix {};
       ospf-mdr = prev.callPackage ./ospf-mdr.nix {};
       core-emu = with prev.python3Packages; toPythonApplication core-emu;
 

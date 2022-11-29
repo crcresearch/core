@@ -26,6 +26,7 @@
   tcpdump,
   umount,
   ospf-mdr,
+  emane,
   # Python Dependencies
   invoke,
   lxml,
@@ -141,7 +142,7 @@ in
         --prefix PATH : ${lib.makeBinPath [procps gnugrep coreutils killall iproute2 gawk nftables]}
 
       wrapProgram $out/bin/core-daemon \
-        --prefix PATH : ${lib.makeBinPath ([bash nftables iproute2 ethtool libuuid mount procps umount ospf-mdr] ++ (lib.lists.optional withDocker docker-client))}
+        --prefix PATH : ${lib.makeBinPath ([bash nftables iproute2 ethtool libuuid mount procps umount ospf-mdr emane] ++ (lib.lists.optional withDocker docker-client))}
 
       wrapProgram $out/bin/core-route-monitor --prefix PATH : ${lib.makeBinPath [tcpdump]}
 

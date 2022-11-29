@@ -14,6 +14,7 @@
         default = pkgs.core-emu;
         core-emu = pkgs.core-emu;
         ospf-mdr = pkgs.ospf-mdr;
+        emane = pkgs.emane;
       }
       // (builtins.mapAttrs (name: value: value.withPackages (p: [p.core-emu])) pythonPackages);
   };
