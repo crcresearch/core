@@ -32,7 +32,7 @@
   lxml,
   Mako,
   Fabric,
-  poetry,
+  poetry-core,
   pyproj,
   protobuf,
   pillow,
@@ -112,7 +112,7 @@ in
       lxml
       Mako
       Fabric
-      poetry
+      poetry-core
       pyproj
       protobuf
       pillow
@@ -122,6 +122,11 @@ in
       grpcio-tools
       tkinter
     ];
+
+    postPatch = ''
+      substituteInPlace daemon/pyproject.toml \
+        --replace 'build-backend = "poetry.masonry.api"' 'build-backend = "poetry.core.masonry.api"'
+    '';
 
     buildPhase = ''
       make
