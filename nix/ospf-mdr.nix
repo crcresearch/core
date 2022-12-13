@@ -49,6 +49,7 @@ stdenv.mkDerivation rec {
     "--enable-vty-group=quaggavty"
     "--enable-configfile-mask=0640"
     "--enable-logfile-mask=0640"
+    "--enable-ipv6"
   ];
 
   enableParallelBuilding = true;
