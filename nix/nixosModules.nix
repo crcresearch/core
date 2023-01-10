@@ -16,7 +16,7 @@
           package = mkOption {
             type = types.path;
             description = mdDoc "The CORE package to use";
-            default = self.packages.${pkgs.hostPlatform.system}.core-emu;
+            default = pkgs.core-emu;
             defaultText = literalExpression "self.packages.core-emu";
           };
 
