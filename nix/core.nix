@@ -27,6 +27,7 @@
   umount,
   ospf-mdr,
   emane,
+  hostname,
   # Python Dependencies
   invoke,
   lxml,
@@ -104,6 +105,7 @@ in
       libev
       openvswitch
       imagemagick
+      hostname
     ];
 
     pythonRelaxDeps = ["fabric" "grpcio" "invoke" "lxml" "mako" "netaddr" "pillow" "protobuf" "pyproj" "pyyaml"];
@@ -147,7 +149,7 @@ in
         --prefix PATH : ${lib.makeBinPath [procps gnugrep coreutils killall iproute2 gawk nftables]}
 
       wrapProgram $out/bin/core-daemon \
-        --prefix PATH : ${lib.makeBinPath ([bash nftables iproute2 ethtool libuuid mount procps umount ospf-mdr emane] ++ (lib.lists.optional withDocker docker-client))}
+        --prefix PATH : ${lib.makeBinPath ([bash nftables iproute2 ethtool libuuid mount procps umount ospf-mdr emane hostname] ++ (lib.lists.optional withDocker docker-client))}
 
       wrapProgram $out/bin/core-route-monitor --prefix PATH : ${lib.makeBinPath [tcpdump]}
 
