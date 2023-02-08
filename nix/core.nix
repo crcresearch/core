@@ -28,7 +28,9 @@
   ospf-mdr,
   emane,
   hostname,
+  frr,
   # Python Dependencies
+  python3,
   invoke,
   lxml,
   Mako,
@@ -42,6 +44,16 @@
   grpcio,
   grpcio-tools,
   tkinter,
+  # Services
+  bird,
+  openssh,
+  olsrd,
+  openvpn,
+  at,
+  dhcp,
+  vsftpd,
+  radvd,
+  iptables,
   # Docs
   withDocs ? true,
   help2man,
@@ -123,11 +135,18 @@ in
       grpcio
       grpcio-tools
       tkinter
+      emane
     ];
 
     postPatch = ''
       substituteInPlace daemon/pyproject.toml \
         --replace 'build-backend = "poetry.masonry.api"' 'build-backend = "poetry.core.masonry.api"'
+
+      # Fix EMANE paths
+      substituteInPlace daemon/core/emane/emanemanager.py --replace "/usr" "${emane}"
+      substituteInPlace daemon/core/emulator/coreemu.py --replace "/usr" "${emane}"
+      substituteInPlace daemon/core/xml/emanexml.py --replace "/usr" "${emane}"
+      substituteInPlace daemon/core/gui/data/xmls/*.xml --replace "/usr" "${emane}"
     '';
 
     buildPhase = ''
@@ -139,6 +158,38 @@ in
       popd
     '';
 
+    toolPaths = lib.makeBinPath (
+      [
+        bash
+        nftables
+        iproute2
+        ethtool
+        libuuid
+        mount
+        procps
+        umount
+        ospf-mdr
+        emane
+        hostname
+
+        # Service Dependencies
+        bird
+        openssh
+        olsrd
+        openvswitch
+        frr
+        openvpn
+        at
+        dhcp
+        vsftpd
+        radvd
+        iptables
+        killall
+        tcpdump
+      ]
+      ++ (lib.lists.optional withDocker docker-client)
+    );
+
     installPhase = ''
       make install
       runHook pipInstallPhase
@@ -149,7 +200,8 @@ in
         --prefix PATH : ${lib.makeBinPath [procps gnugrep coreutils killall iproute2 gawk nftables]}
 
       wrapProgram $out/bin/core-daemon \
-        --prefix PATH : ${lib.makeBinPath ([bash nftables iproute2 ethtool libuuid mount procps umount ospf-mdr emane hostname] ++ (lib.lists.optional withDocker docker-client))}
+        --prefix PATH : ${toolPaths} \
+        --prefix PATH : "${ospf-mdr}/libexec/quagga"
 
       wrapProgram $out/bin/core-route-monitor --prefix PATH : ${lib.makeBinPath [tcpdump]}
 
@@ -159,6 +211,8 @@ in
 
     checkInputs = [pytest mock];
     checkPhase = ''
+      substituteInPlace daemon/tests/conftest.py --replace '"emane_prefix": "/usr"' '"emane_prefix": "${emane.out}"'
+
       pushd daemon
       pytest -v --mock --lf -x tests
       popd
