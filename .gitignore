@@ -58,3 +58,5 @@ daemon/setup.py
 
 # python
 __pycache__
+
+nixos.qcow2
