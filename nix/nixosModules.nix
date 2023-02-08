@@ -1,4 +1,9 @@
-{moduleWithSystem, ...}: {
+{
+  lib,
+  self,
+  moduleWithSystem,
+  ...
+}: {
   flake = {
     nixosModules.core = moduleWithSystem (
       perSystem @ {config}: nixos @ {
@@ -10,6 +15,7 @@
         with lib; let
           cfg = config.services.core-emu;
           settingsFormat = pkgs.formats.ini {};
+          logSettingsFormat = pkgs.formats.json {};
         in {
           options.services.core-emu = {
             enable = mkEnableOption (mdDoc "Common Open Research Emulator");
@@ -22,18 +28,39 @@
             };
 
             settings = lib.mkOption {
+              description =
+                lib.mdDoc ''
+                '';
               type = lib.types.submodule {
-                freeformType = with lib.types; attrsOf (oneOf [bool int float str]);
+                freeformType = settingsFormat.type;
 
-                options.port = lib.mkOption {
+                options = {
+                  core-daemon = {
+                    listenaddr = lib.mkOption {
+                      type = lib.types.str;
+                      default = "localhost";
+                      description = ''
+                        Which address the daemon service should listen on.
+                      '';
+                    };
+
+                    port = lib.mkOption {
                   type = lib.types.port;
                   default = 4038;
                   description = ''
-                    Which port thi service should listen on.
+                        Which port the daemon service should listen on.
                   '';
                 };
 
-                options.grpcport = lib.mkOption {
+                    grpcaddress = lib.mkOption {
+                      type = lib.types.str;
+                      default = "localhost";
+                      description = ''
+                        Which address the GRPC service should listen on.
+                      '';
+                    };
+
+                    grpcport = lib.mkOption {
                   type = lib.types.port;
                   default = 50051;
                   description = ''
@@ -41,9 +68,17 @@
                   '';
                 };
               };
-              default = {};
-              description = ''
+                };
+              };
+            };
+
+            logging = lib.mkOption {
+              description =
+                lib.mdDoc ''
               '';
+              type = lib.types.submodule {
+                freeformType = logSettingsFormat.type;
+              };
             };
           };
 
@@ -58,19 +93,61 @@
             };
 
             # Add the package to the system to make it easier for users to run
-            environment.systemPackages = [cfg.package];
+            environment.systemPackages = [
+              cfg.package
+              perSystem.config.packages.emane.out
+            ];
 
             # Set some default settings
             services.core-emu.settings = {
-              listenaddr = lib.mkDefault "localhost";
-              grpcaddress = lib.mkDefault "localhost";
+              core-daemon = {
+                quagga_bin_search = "${perSystem.config.packages.ospf-mdr}/bin/";
+                quagga_sbin_search = "${perSystem.config.packages.ospf-mdr}/libexec/quagga/";
+                frr_bin_search = "${pkgs.frr}/bin";
+                frr_sbin_search = "${pkgs.frr}/libexec/frr";
+                emane_prefix = "${perSystem.config.packages.emane}";
+              };
+            };
+
+            services.core-emu.logging = {
+              version = 1;
+              handlers = {
+                console = {
+                  class = "logging.StreamHandler";
+                  formatter = "default";
+                  level = lib.mkDefault "DEBUG";
+                  stream = "ext://sys.stdout";
+                };
+              };
+              formatters = {
+                default = {
+                  format = "%(asctime)s - %(levelname)s - %(module)s:%(funcName)s - %(message)s";
+                };
+              };
+              loggers = {
+                "" = {
+                  level = lib.mkDefault "WARNING";
+                  handlers = ["console"];
+                  propagate = false;
+                };
+
+                core = {
+                  level = lib.mkDefault "INFO";
+                  handlers = ["console"];
+                  propagate = false;
+                };
+
+                "__main__" = {
+                  level = lib.mkDefault "INFO";
+                  handlers = ["console"];
+                  propagate = false;
+                };
+              };
             };
 
             # Generate etc configs
-            environment.etc."core/core.conf".source = settingsFormat.generate "core-config.conf" {
-              core-daemon = cfg.settings;
-            };
-            environment.etc."core/logging.conf".source = "${cfg.package}/etc/core/logging.conf";
+            environment.etc."core/core.conf".source = settingsFormat.generate "core-config.conf" cfg.settings;
+            environment.etc."core/logging.conf".source = logSettingsFormat.generate "core-logging.conf" cfg.logging;
 
             # Create daemon service
             systemd.services.core-daemon = {
@@ -89,7 +166,7 @@
                       PID=$1
                       while(true); do
                           FAIL=0
-                          $(${pkgs.netcat}/bin/nc -z -w 1 ${cfg.settings.grpcaddress} ${builtins.toString cfg.settings.grpcport} &> /dev/null) || FAIL=1
+                          $(${pkgs.netcat}/bin/nc -z -w 1 ${cfg.settings.core-daemon.grpcaddress} ${builtins.toString cfg.settings.core-daemon.grpcport} &> /dev/null) || FAIL=1
                           if [[ $FAIL -eq 0 ]]; then
                               if [[ $READY -eq 0 ]]; then
                                 ${pkgs.systemdMinimal}/bin/systemd-notify --ready
