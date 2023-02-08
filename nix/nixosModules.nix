@@ -4,6 +4,31 @@
   moduleWithSystem,
   ...
 }: {
+  perSystem = {pkgs, ...}: {
+    packages.vm = let
+      image = pkgs.nixos ({pkgs, ...}: {
+        imports = [
+          self.nixosModules.core
+        ];
+
+        config = {
+          services.core-emu.enable = true;
+          services.core-emu.logging.loggers."".level = "DEBUG";
+          services.core-emu.logging.loggers."core".level = "DEBUG";
+          services.core-emu.logging.loggers."__main__".level = "DEBUG";
+
+          services.getty.autologinUser = lib.mkDefault "root";
+          users = {
+            mutableUsers = false;
+            # P@ssw0rd
+            users.root.initialHashedPassword = "$6$WckEbJSAyYlddJni$l.h.AyA.yVc/yOFC8R5tRQaJoENk9Ec2iu6w9HyfdcgTzK9iolNCq1gSt0FAN1Bj6ZSvDKH8FiOW2XyJyFgod1";
+          };
+        };
+      });
+    in
+      image.config.system.build.vm;
+  };
+
   flake = {
     nixosModules.core = moduleWithSystem (
       perSystem @ {config}: nixos @ {
@@ -45,12 +70,12 @@
                     };
 
                     port = lib.mkOption {
-                  type = lib.types.port;
-                  default = 4038;
-                  description = ''
+                      type = lib.types.port;
+                      default = 4038;
+                      description = ''
                         Which port the daemon service should listen on.
-                  '';
-                };
+                      '';
+                    };
 
                     grpcaddress = lib.mkOption {
                       type = lib.types.str;
@@ -61,13 +86,13 @@
                     };
 
                     grpcport = lib.mkOption {
-                  type = lib.types.port;
-                  default = 50051;
-                  description = ''
-                    Which port the GRPC service should listen on.
-                  '';
-                };
-              };
+                      type = lib.types.port;
+                      default = 50051;
+                      description = ''
+                        Which port the GRPC service should listen on.
+                      '';
+                    };
+                  };
                 };
               };
             };
@@ -75,7 +100,7 @@
             logging = lib.mkOption {
               description =
                 lib.mdDoc ''
-              '';
+                '';
               type = lib.types.submodule {
                 freeformType = logSettingsFormat.type;
               };
