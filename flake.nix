@@ -3,18 +3,19 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    flake-parts.url = "github:hercules-ci/flake-parts";
     gitignore = {
       url = "github:hercules-ci/gitignore.nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
 
-  outputs = {
+  outputs = inputs @ {
     self,
     flake-parts,
     ...
   }:
-    flake-parts.lib.mkFlake {inherit self;} {
+    flake-parts.lib.mkFlake {inherit inputs;} {
       imports = [
         ./nix/overlays.nix
         ./nix/packages.nix
