@@ -147,6 +147,15 @@ in
       substituteInPlace daemon/core/emulator/coreemu.py --replace "/usr" "${emane}"
       substituteInPlace daemon/core/xml/emanexml.py --replace "/usr" "${emane}"
       substituteInPlace daemon/core/gui/data/xmls/*.xml --replace "/usr" "${emane}"
+
+      # Fix Service Paths
+      substituteInPlace daemon/core/configservices/quaggaservices/services.py \
+        --replace "/usr/local/bin /usr/bin /usr/lib/frr" "${frr}/bin" \
+        --replace "/usr/local/sbin /usr/sbin /usr/lib/frr" "${frr}/libexec/frr"
+
+      substituteInPlace daemon/core/configservices/quaggaservices/services.py \
+        --replace "/usr/local/bin /usr/bin /usr/lib/quagga" "${ospf-mdr}/bin" \
+        --replace "/usr/local/sbin /usr/sbin /usr/lib/quagga" "${ospf-mdr}/libexec/quagga"
     '';
 
     buildPhase = ''
