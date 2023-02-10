@@ -11,7 +11,23 @@
           self.nixosModules.core
         ];
 
-        config = {
+        config = let
+          diskSize = 16 * 1024;
+          memorySize = 8 * 1024;
+        in {
+          virtualisation.vmVariant.virtualisation = {
+            inherit diskSize memorySize;
+
+            forwardPorts = [
+              {
+                from = "host";
+                host.port = 2222;
+                guest.port = 22;
+              }
+            ];
+          };
+          documentation.nixos.enable = false;
+
           services.core-emu.enable = true;
           services.core-emu.logging.loggers."".level = "DEBUG";
           services.core-emu.logging.loggers."core".level = "DEBUG";
