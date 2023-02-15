@@ -41,7 +41,7 @@ stdenv.mkDerivation rec {
   '';
 
   configureFlags = [
-    "--sysconfdir=/etc/quagga"
+    "--sysconfdir=/usr/local/etc/quagga"
     "--localstatedir=/var/run/quagga"
     "--sbindir=$(out)/libexec/quagga"
     "--enable-exampledir=$(out)/share/doc/quagga/examples/"
