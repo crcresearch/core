@@ -115,7 +115,7 @@ class DockerNode(CoreNode):
         :param use_ovs: True for OVS bridges, False for Linux bridges
         :return:node network client
         """
-        return get_net_client(use_ovs, self.nsenter_cmd)
+        return get_net_client(use_ovs, self.cmd)
 
     def alive(self) -> bool:
         """
@@ -156,7 +156,7 @@ class DockerNode(CoreNode):
             self.client.stop_container()
             self.up = False
 
-    def nsenter_cmd(self, args: str, wait: bool = True, shell: bool = False) -> str:
+    def cmd(self, args: str, wait: bool = True, shell: bool = False) -> str:
         if self.server is None:
             args = self.client.create_ns_cmd(args)
             return utils.cmd(args, wait=wait, shell=shell)
