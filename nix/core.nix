@@ -163,8 +163,12 @@ in
 
       pushd daemon
       runHook pipBuildPhase
+      runHook pipWheelPhase
       mv dist ../
       popd
+
+      mkdir -p $out/share/core/
+      cp dist/*.whl $out/share/core/
     '';
 
     toolPaths = lib.makeBinPath (
