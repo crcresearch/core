@@ -148,7 +148,7 @@ in
       substituteInPlace daemon/core/gui/data/xmls/*.xml --replace "/usr" "${emane}"
 
       # Fix Service Paths
-      substituteInPlace daemon/core/configservices/quaggaservices/services.py \
+      substituteInPlace daemon/core/configservices/frrservices/services.py \
         --replace "/usr/local/bin /usr/bin /usr/lib/frr" "${frr}/bin" \
         --replace "/usr/local/sbin /usr/sbin /usr/lib/frr" "${frr}/libexec/frr"
 
