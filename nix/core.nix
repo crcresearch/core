@@ -50,7 +50,6 @@
   olsrd,
   openvpn,
   at,
-  dhcp,
   vsftpd,
   radvd,
   iptables,
@@ -193,7 +192,6 @@ in
         frr
         openvpn
         at
-        dhcp
         vsftpd
         radvd
         iptables
