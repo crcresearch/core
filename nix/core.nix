@@ -54,7 +54,7 @@
   radvd,
   iptables,
   # Docs
-  withDocs ? true,
+  withDocs ? false,
   help2man,
   sphinx,
   sphinx-rtd-theme,
