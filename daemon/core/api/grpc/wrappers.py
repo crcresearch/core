@@ -819,18 +819,26 @@ class Node:
             config_service_configs[service] = configservices_pb2.ConfigServiceConfig(
                 templates=service_config.templates, config=service_config.config
             )
+        position = None
+        if self.position is not None:
+            position = self.position.to_proto()
+        geo = None
+        if self.geo is not None:
+            geo = self.geo.to_proto()
+
         return core_pb2.Node(
             id=self.id,
             name=self.name,
             type=self.type.value,
             model=self.model,
-            position=self.position.to_proto(),
+            position=position,
             services=self.services,
             config_services=self.config_services,
             emane=self.emane,
             icon=self.icon,
             image=self.image,
             server=self.server,
+            geo=geo,
             dir=self.dir,
             channel=self.channel,
             canvas=self.canvas,
